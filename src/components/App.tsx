@@ -6,9 +6,8 @@ import { getTwitchAuthToken } from '../store/config';
 import ClipsList from './Clips/List';
 
 const App = () => {
-    const { state, setState } = useState();
-
-  const [clipData, setClipData] = createSignal([]);
+  const { state, setState } = useState();
+ 
 
   const clipByBroadcaster = { broadcaster_id: 985378831, first: 50 };
 
@@ -17,7 +16,8 @@ const App = () => {
     try {
       const allClips = await getDataFromApi(import.meta.env.VITE_TWITCH_CLIPS, clipByBroadcaster);
       console.log(allClips);
-      setClipData(allClips);
+      setState('clips', allClips);
+ 
     } catch (error) {
       console.error('Error fetching Twitch data:', error);
     }
@@ -25,10 +25,8 @@ const App = () => {
 
   return (
     <div>
-      <h1>All clips</h1>
-      <Show when={clipData().length > 0}>
-        <ClipsList clips={clipData()} />
-    </Show>     
+      <h1 class="text-xl">Crafty clips</h1>
+        <ClipsList />
         
     </div>
   );

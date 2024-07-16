@@ -1,9 +1,20 @@
-/* @refresh reload */
-import { render } from 'solid-js/web'
+import { render } from "solid-js/web";
+import { Router, Route } from "@solidjs/router";
+import "./index.css";
+import App from "./components/App";
+import BRBScene from "./components/BRBScene";
+import { ContextProvider } from "./store";
 
-import './index.css'
-import App from './components/App'
+const root = document.getElementById("root");
 
-const root = document.getElementById('root')
-
-render(() => <App />, root!)
+render(
+  () => (
+    <ContextProvider>
+      <Router>
+        <Route path="/" component={App} />
+        <Route path="/brbscene" component={BRBScene} />
+      </Router>
+    </ContextProvider>
+  ),
+  root!
+);

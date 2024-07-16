@@ -1,4 +1,6 @@
- interface TwitchAuthInfo {
+
+
+interface TwitchAuthInfo {
     access_token: string;
     token_type: string;
     scope: string;
@@ -19,6 +21,8 @@
     created_at: string;
     thumbnail_url: string;
     duration: number;
+    vod_offset: any;
+    is_featured: any;
   }
   
  interface TwitchVideo {
