@@ -7,12 +7,15 @@ import { ContextProvider } from "./store";
 
 const root = document.getElementById("root");
 
+// Determine the base path based on the environment
+const base = import.meta.env.MODE === "github-pages" ? "/CraftyClips" : "/";
+
 render(
   () => (
     <ContextProvider>
-      <Router>
-        <Route path="/" component={App} />
-        <Route path="/clipmanager" component={ClipManager} />
+      <Router base={base}>
+          <Route path="/" component={App} />
+          <Route path="/clipmanager" component={ClipManager} />
       </Router>
     </ContextProvider>
   ),
