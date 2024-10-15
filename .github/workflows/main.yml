@@ -25,7 +25,9 @@ jobs:
         run: pnpm install
 
       - name: Build the project for GitHub Pages
-        run: pnpm build --mode github-pages # Build with GitHub Pages mode
+        run: |
+          pnpm build --mode github-pages
+          cp dist/index.html dist/404.html  # Copy index.html to 404.html
 
       - name: Verify build output
         run: ls -al ./dist
