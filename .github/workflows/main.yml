@@ -17,16 +17,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
+          
+      - name: Install pnpm
+        run: npm install -g pnpm  # Install pnpm globally
+        
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Build the project
-        run: npm run build
+        run: pnpm build
+
+      - name: Verify build output
+        run: ls -al ./dist  # List contents of the build folder to verify it exists
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages  # Ensure correct branch is targeted
-          publish_dir: ./dist  # Adjust if your build output folder differs
+          publish_branch: gh-pages
+          publish_dir: ./dist
