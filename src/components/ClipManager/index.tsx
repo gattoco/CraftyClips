@@ -2,6 +2,7 @@ import { createSignal, For, Show } from "solid-js";
 import { useState } from "../../store";
 import ClipsList from "../Clips/List";
 import { getDataFromApi } from "../../api/twitch";
+import { TwitchApiEndpoints } from "../../store/config";
 
 const ClipManager = () => {
   const { state, setState } = useState();
@@ -47,7 +48,7 @@ const ClipManager = () => {
   const fetchClipByURL = async (url: string) => {
     try {
       const clipId = extractClipIdFromURL(url);
-      const clipData = await getDataFromApi(import.meta.env.VITE_TWITCH_CLIP, { id: clipId });
+      const clipData = await getDataFromApi(TwitchApiEndpoints.CLIPS, { id: clipId });
       if (clipData.length) {
         setState('clips', [...state.clips, clipData[0]]);
       }

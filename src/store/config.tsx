@@ -1,6 +1,12 @@
 import { createStore } from "solid-js/store";
 import { getTwitchAuth } from "../api/twitch";
 
+export const TwitchApiEndpoints = {
+    AUTH: "https://id.twitch.tv/oauth2/token",
+    CLIPS: "https://api.twitch.tv/helix/clips",
+    GAMES: "https://api.twitch.tv/helix/games",
+}
+
 export const [twitchAuth, setTwitchAuth] = createStore<TwitchAuthInfo>({
     access_token: "",
     token_type: "",

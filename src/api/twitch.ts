@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { twitchAuth } from '../store/config';
+import { twitchAuth, TwitchApiEndpoints } from '../store/config';
 
 const getTwitchAuth = async () => {
   try {
-    const response = await axios.post(import.meta.env.VITE_TWITCH_TOKEN_URL, null, {
+    const response = await axios.post(TwitchApiEndpoints.AUTH, null, {
       params: {
         client_id: import.meta.env.VITE_TWITCH_CLIENT_ID,
         client_secret: import.meta.env.VITE_TWITCH_CLIENT_SECRET,
@@ -58,7 +58,7 @@ const enrichClipsWithGameDetails = async(clips: TwitchClip[]): Promise<TwitchCli
 // Fetch game details using the same getDataFromApi function
 const fetchGameDetails = async(gameId: string): Promise<TwitchGame | null> => {
   try {
-    const games = await getDataFromApi(import.meta.env.VITE_TWITCH_GAMES, { id: gameId });
+    const games = await getDataFromApi(TwitchApiEndpoints.GAMES, { id: gameId });
     return games.length ? games[0] : null;
   } catch (error) {
     console.error(`Error fetching game details for game ID: ${gameId}`, error);

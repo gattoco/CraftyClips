@@ -24,10 +24,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build the project for GitHub Pages
+      - name: Set environment variables
         run: |
-          pnpm build --mode github-pages
-          cp dist/index.html dist/404.html  # Copy index.html to 404.html
+          echo "VITE_TWITCH_CLIENT_ID=${{ secrets.VITE_TWITCH_CLIENT_ID }}" >> .env
+          echo "VITE_TWITCH_CLIENT_SECRET=${{ secrets.VITE_TWITCH_CLIENT_SECRET }}" >> .env
+          echo "VITE_CRAFTY_BROADCASTER_ID=${{ secrets.VITE_CRAFTY_BROADCASTER_ID }}" >> .env
+          echo "VITE_CRAFTY_BROADCASTER_NAME=${{ secrets.VITE_CRAFTY_BROADCASTER_NAME }}" >> .env
+
+      - name: Build the project for GitHub Pages
+        run: pnpm build --mode github-pages
 
       - name: Verify build output
         run: ls -al ./dist
