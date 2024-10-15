@@ -1,4 +1,8 @@
-
+interface Page {
+  name: string;
+  url: string;
+  component: () => JSX.Element;
+}
 
 interface TwitchAuthInfo {
     access_token: string;
