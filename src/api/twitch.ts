@@ -38,4 +38,32 @@ const getDataFromApi = async (url: string, params: any) => {
   }
 };
 
-export { getTwitchAuth, getDataFromApi };
+const enrichClipsWithGameDetails = async(clips: TwitchClip[]): Promise<TwitchClip[]> => {
+  const gameDetailsCache: Record<string, TwitchGame> = {};
+
+  const enrichedClips = await Promise.all(
+    clips.map(async (clip) => {
+      if (clip.game_id && !gameDetailsCache[clip.game_id]) {
+        const gameDetails = await fetchGameDetails(clip.game_id);
+        if (gameDetails) gameDetailsCache[clip.game_id] = gameDetails;
+      }
+      clip.game = gameDetailsCache[clip.game_id] || null;
+      return clip;
+    })
+  );
+
+  return enrichedClips;
+}
+
+// Fetch game details using the same getDataFromApi function
+const fetchGameDetails = async(gameId: string): Promise<TwitchGame | null> => {
+  try {
+    const games = await getDataFromApi(import.meta.env.VITE_TWITCH_GAMES, { id: gameId });
+    return games.length ? games[0] : null;
+  } catch (error) {
+    console.error(`Error fetching game details for game ID: ${gameId}`, error);
+    return null;
+  }
+}
+
+export { getTwitchAuth, getDataFromApi, enrichClipsWithGameDetails, fetchGameDetails };

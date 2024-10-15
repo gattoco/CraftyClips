@@ -4,6 +4,7 @@ import { createStore } from 'solid-js/store';
 interface AppState {
     show: boolean;
     clips: TwitchClip[];
+    clipQueue: ClipQueue[];
  }
 
 export const INITIAL_STATE: AppState = {
@@ -27,6 +28,11 @@ export const INITIAL_STATE: AppState = {
         "vod_offset": null,
         "is_featured": true
     }],
+    clipQueue: [{
+        "name": "All clips",
+        "clips": ["StormyDrabInternPartyTime-3IaQrlGNRsscQU08"]
+    }]
+
 };
 
 const devData: Partial<AppState> = {

@@ -1,7 +1,7 @@
 import { Show, createSignal, onMount } from 'solid-js';
 import { useState } from '../store';
 
-import { getDataFromApi } from '../api/twitch';
+import { enrichClipsWithGameDetails, getDataFromApi } from '../api/twitch';
 import { getTwitchAuthToken } from '../store/config';
 import ClipsList from './Clips/List';
 
@@ -15,8 +15,11 @@ const App = () => {
     await getTwitchAuthToken();
     try {
       const allClips = await getDataFromApi(import.meta.env.VITE_TWITCH_CLIPS, clipByBroadcaster);
-      console.log(allClips);
-      setState('clips', allClips);
+      console.log("All clips", allClips);
+      const enrichedClips = await enrichClipsWithGameDetails(allClips);
+      console.log('Enriched Clips:', enrichedClips);
+      
+      setState('clips', enrichedClips);
  
     } catch (error) {
       console.error('Error fetching Twitch data:', error);
@@ -26,7 +29,7 @@ const App = () => {
   return (
     <div>
       <h1 class="text-xl">Crafty clips</h1>
-        <ClipsList />
+        <ClipsList clips={state.clips} />
         
     </div>
   );
