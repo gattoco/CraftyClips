@@ -3,7 +3,7 @@ name: Deploy SolidJS App
 on:
   push:
     branches:
-      - main  # Deploy on every push to the main branch
+      - main
 
 jobs:
   build:
@@ -17,18 +17,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          
+
       - name: Install pnpm
-        run: npm install -g pnpm  # Install pnpm globally
-        
+        run: npm install -g pnpm
+
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build the project
-        run: pnpm build
+      - name: Build the project for GitHub Pages
+        run: pnpm build --mode github-pages # Build with GitHub Pages mode
 
       - name: Verify build output
-        run: ls -al ./dist  # List contents of the build folder to verify it exists
+        run: ls -al ./dist
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
