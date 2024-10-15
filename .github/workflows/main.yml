@@ -1,9 +1,9 @@
-name: Deploy App Locally
+name: Deploy SolidJS App
 
 on:
   push:
     branches:
-      - main  # Triggers the workflow on every push to the 'main' branch
+      - main  # Deploy on every push to the main branch
 
 jobs:
   build:
@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4  # Use the latest version
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4  # Use the latest version with Node 20
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
@@ -28,4 +28,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages  # Ensure correct branch is targeted
           publish_dir: ./dist  # Adjust if your build output folder differs
