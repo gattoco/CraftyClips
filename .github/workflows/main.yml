@@ -1,9 +1,9 @@
-name: Test deploy
+name: Deploy App Locally
 
 on:
   push:
     branches:
-      - main  # Deploy on every push to the main branch
+      - main  # Triggers the workflow on every push to the 'main' branch
 
 jobs:
   build:
@@ -11,21 +11,21 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Use the latest version
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4  # Use the latest version with Node 20
         with:
-          node-version: 18  # Use the required Node.js version for SolidJS
+          node-version: 20
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
       - name: Build the project
-        run: pnpm run build
+        run: npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # The directory where your static site is built
+          publish_dir: ./dist  # Adjust if your build output folder differs
