@@ -5,20 +5,23 @@ const App = lazy(() => import("../components/App"));
 const ClipManager = lazy(() => import("../components/ClipManager"));
 const ClipQueue = lazy(() => import("../components/ClipQueue"));
 
+const base = import.meta.env.MODE === "github-pages" ? "/CraftyClips" : "/";
+
+
 export const pages = [
   {
     name: "Home",
-    url: "/",
+    url: base,
     component: App,
   },
   {
     name: "Clip Manager",
-    url: "/clipmanager",
+    url: "clipmanager",
     component: ClipManager,
   },
   {
     name: "Clip Queue",
-    url: "/clipmanager/:id",
+    url: "clipmanager/:id",
     component: ClipQueue,
     hidden: true
   },
