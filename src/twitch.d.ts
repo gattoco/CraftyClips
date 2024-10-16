@@ -50,6 +50,7 @@ interface TwitchVideo {
 }
 
 interface ClipQueue {
+  id: any;
   name: string;
   clips: string[];
 }

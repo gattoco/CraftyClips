@@ -2,19 +2,19 @@ import { createSignal, For, Show } from "solid-js";
 import { useState } from "../../store";
 import ClipsList from "../Clips/List";
 import { getDataFromApi } from "../../api/twitch";
-import { TwitchApiEndpoints } from "../../store/config";
+import { generateUUID, TwitchApiEndpoints } from "../../store/config";
 
 const ClipManager = () => {
   const { state, setState } = useState();
   const [queues, setQueues] = createSignal<ClipQueue[]>(state.clipQueue ?? []);
-  const [selectedQueueName, setSelectedQueueName] = createSignal<string | null>("all");
+  const [selectedQueueId, setSelectedQueueId] = createSignal<string | null>("all"); // Updated to use id instead of name
   const [newQueueName, setNewQueueName] = createSignal('');
   const [showClipSelector, setShowClipSelector] = createSignal(false);
   const [newClipURL, setNewClipURL] = createSignal('');
 
-  const getClipsForQueue = (queueName: string | null) => {
-    if (queueName === "all") return state.clips;
-    const queue = queues().find((q) => q.name === queueName);
+  const getClipsForQueue = (queueId: string | null) => {
+    if (queueId === "all") return state.clips;
+    const queue = queues().find((q) => q.id === queueId); // Find queue by id instead of name
     return queue
       ? queue.clips
           .map((id) => state.clips.find((clip) => clip.id === id))
@@ -22,10 +22,10 @@ const ClipManager = () => {
       : [];
   };
 
-  const toggleClipInQueue = (clipId: string, queueName: string) => {
+  const toggleClipInQueue = (clipId: string, queueId: string) => {
     setQueues((prev) =>
       prev.map((queue) =>
-        queue.name === queueName
+        queue.id === queueId
           ? {
               ...queue,
               clips: queue.clips.includes(clipId)
@@ -40,7 +40,7 @@ const ClipManager = () => {
   const createClipQueue = () => {
     const name = newQueueName().trim();
     if (name) {
-      setQueues([...queues(), { name, clips: [] }]);
+      setQueues([...queues(), { name, clips: [], id: generateUUID() }]); // UUID for queue id
       setNewQueueName('');
     }
   };
@@ -63,67 +63,93 @@ const ClipManager = () => {
   };
 
   return (
-    <>
-      <h1>Clip Manager</h1>
-
-      <div>
-        <h2>Select a Queue</h2>
-        <select onChange={(e) => setSelectedQueueName(e.currentTarget.value)}>
+    <div class="container mx-auto p-4">
+      {/* Queue Selection */}
+      <div class="mb-6">
+        <h2 class="text-lg font-bold mb-2">Select a Queue</h2>
+        <select
+          class="p-2 border rounded w-full"
+          onChange={(e) => setSelectedQueueId(e.currentTarget.value)}
+        >
           <option value="all">All Clips</option>
           <For each={queues()}>
-            {(queue) => <option value={queue.name}>{queue.name}</option>}
+            {(queue) => (
+              <option value={queue.id}>{queue.name}</option>
+            )}
           </For>
         </select>
       </div>
 
-      <div>
+      {/* Create New Queue */}
+      <div class="mb-6">
         <input
+          class="p-2 border rounded w-full mb-2"
           type="text"
           value={newQueueName()}
           onInput={(e) => setNewQueueName(e.currentTarget.value)}
           placeholder="New Queue Name"
         />
-        <button onClick={createClipQueue}>Create new</button>
+        <button
+          class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          onClick={createClipQueue}
+        >
+          Create new queue
+        </button>
       </div>
 
-      <div>
-        <h2>Add New Clip by URL</h2>
+      {/* Add New Clip by URL */}
+      <div class="mb-6">
+        <h2 class="text-lg font-bold mb-2">Add New Clip by URL</h2>
         <input
+          class="p-2 border rounded w-full mb-2"
           type="text"
           value={newClipURL()}
           onInput={(e) => setNewClipURL(e.currentTarget.value)}
           placeholder="Paste Twitch Clip URL"
         />
-        <button onClick={() => fetchClipByURL(newClipURL())}>Add Clip</button>
+        <button
+          class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+          onClick={() => fetchClipByURL(newClipURL())}
+        >
+          Add Clip
+        </button>
       </div>
 
-      <button onClick={() => setShowClipSelector(!showClipSelector())}>
-        {showClipSelector() ? "Hide Clip Selector" : "Show Clip Selector"}
-      </button>
+      {/* Toggle Clip Selector */}
+      <div class="mb-6">
+        <button
+          class="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600"
+          onClick={() => setShowClipSelector(!showClipSelector())}
+        >
+          {showClipSelector() ? "Hide Clip Selector" : "Show Clip Selector"}
+        </button>
+      </div>
 
+      {/* Clip Selector */}
       <Show when={showClipSelector()}>
-        <h2>Select Clips to Add/Remove</h2>
-        <For each={state.clips}>
-          {(clip) => (
-            <div>
-              <input
-                type="checkbox"
-                checked={getClipsForQueue(selectedQueueName()).some(
-                  (c) => c.id === clip.id
-                )}
-                onChange={() => toggleClipInQueue(clip.id, selectedQueueName()!)}
-              />
-              {clip.title}
-            </div>
-          )}
-        </For>
+        <h2 class="text-lg font-bold mb-2">Select Clips to Add/Remove</h2>
+        <div class="space-y-2">
+          <For each={state.clips}>
+            {(clip) => (
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={getClipsForQueue(selectedQueueId()).some((c) => c.id === clip.id)}
+                  onChange={() => toggleClipInQueue(clip.id, selectedQueueId()!)}
+                />
+                <span>{clip.title}</span>
+              </div>
+            )}
+          </For>
+        </div>
       </Show>
 
-      <Show when={selectedQueueName() !== null}>
-        <h2>Clips</h2>
-        <ClipsList clips={getClipsForQueue(selectedQueueName())} />
+      {/* Display Clips for Selected Queue */}
+      <Show when={selectedQueueId() !== null}>
+        <h2 class="text-lg font-bold mt-6">Clips</h2>
+        <ClipsList clips={getClipsForQueue(selectedQueueId())} />
       </Show>
-    </>
+    </div>
   );
 };
 

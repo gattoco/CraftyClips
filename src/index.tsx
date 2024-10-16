@@ -1,5 +1,5 @@
 import { For, render } from "solid-js/web";
-import { Router, Route } from "@solidjs/router";
+import { Router, Route, A } from "@solidjs/router";
 import "./index.css";
 import { pages } from "./store/navigation";
 import { ContextProvider } from "./store";
@@ -7,19 +7,29 @@ import { ContextProvider } from "./store";
 const root = document.getElementById("root");
 const base = import.meta.env.MODE === "github-pages" ? "/CraftyClips" : "";
 
-render(
-  () => (
-    <ContextProvider>
-      <nav class="nav-bar">
-        <For each={pages}>
-          {(page) => (
-            <a href={`${base}${page.url}`} class="nav-link mr-2">
+const App = (props: any) => (
+  <>
+    <header>Crafty Clips</header>
+    <aside>
+      <nav>
+      <For each={pages.filter((page) => !page.hidden)}>
+        {(page) => (
+            <A href={`${base}${page.url}`} class="nav-link mr-2">
               {page.name}
-            </a>
+            </A>
           )}
         </For>
       </nav>
-      <Router base={base}>
+    </aside>
+
+    <main>{props.children}</main>
+  </>
+);
+
+render(
+  () => (
+    <ContextProvider>
+      <Router base={base} root={App}>
         <For each={pages}>
           {(page) => <Route path={page.url} component={page.component} />}
         </For>

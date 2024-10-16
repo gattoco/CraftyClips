@@ -30,6 +30,7 @@ export const INITIAL_STATE: AppState = {
     }],
     clipQueue: [{
         "name": "All clips",
+        "id": "all",
         "clips": ["StormyDrabInternPartyTime-3IaQrlGNRsscQU08"]
     }]
 
