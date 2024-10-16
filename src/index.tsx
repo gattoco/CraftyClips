@@ -5,7 +5,6 @@ import { pages } from "./store/navigation";
 import { ContextProvider } from "./store";
 
 const root = document.getElementById("root");
-const base = import.meta.env.MODE === "github-pages" ? "/CraftyClips" : "";
 
 const App = (props: any) => (
   <>
@@ -14,7 +13,7 @@ const App = (props: any) => (
       <nav>
       <For each={pages.filter((page) => !page.hidden)}>
         {(page) => (
-            <A href={`${base}${page.url}`} class="nav-link mr-2">
+            <A href={`${page.url}`} class="nav-link mr-2">
               {page.name}
             </A>
           )}
@@ -29,7 +28,7 @@ const App = (props: any) => (
 render(
   () => (
     <ContextProvider>
-      <Router base={base} root={App}>
+      <Router root={App}>
         <For each={pages}>
           {(page) => <Route path={page.url} component={page.component} />}
         </For>
