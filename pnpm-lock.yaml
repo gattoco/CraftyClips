@@ -20,6 +20,9 @@ dependencies:
   dotenv:
     specifier: ^16.4.5
     version: 16.4.5
+  solid-icons:
+    specifier: ^1.1.0
+    version: 1.1.0(solid-js@1.9.2)
 
 devDependencies:
   '@types/node':
@@ -1601,6 +1604,14 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
     dev: true
+
+  /solid-icons@1.1.0(solid-js@1.9.2):
+    resolution: {integrity: sha512-IesTfr/F1ElVwH2E1110s2RPXH4pujKfSs+koT8rwuTAdleO5s26lNSpqJV7D1+QHooJj18mcOiz2PIKs0ic+A==}
+    peerDependencies:
+      solid-js: '*'
+    dependencies:
+      solid-js: 1.9.2
+    dev: false
 
   /solid-js@1.9.2:
     resolution: {integrity: sha512-fe/K03nV+kMFJYhAOE8AIQHcGxB4rMIEoEyrulbtmf217NffbbwBqJnJI4ovt16e+kaIt0czE2WA7mP/pYN9yg==}

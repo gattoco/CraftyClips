@@ -2,6 +2,9 @@ interface Page {
   name: string;
   url: string;
   component: () => JSX.Element;
+  hidden?: boolean;
+  redirectTo?: string;
+  children?: Page[];
 }
 
 interface TwitchAuthInfo {
@@ -47,6 +50,20 @@ interface TwitchVideo {
   created_at: string;
   thumbnail_url: string;
   duration: number;
+}
+
+interface TwitchUser {
+  broadcaster_type: string;
+  created_at: string;
+  description: string;
+  display_name: string;
+  id: string;
+  login: string;
+  type: string;
+  profile_image_url: string;
+  offline_image_url: string;
+  view_count: number;
+  type: string;
 }
 
 interface ClipQueue {

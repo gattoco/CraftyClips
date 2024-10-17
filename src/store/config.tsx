@@ -5,6 +5,7 @@ export const TwitchApiEndpoints = {
   AUTH: "https://id.twitch.tv/oauth2/token",
   CLIPS: "https://api.twitch.tv/helix/clips",
   GAMES: "https://api.twitch.tv/helix/games",
+  USERS: "https://api.twitch.tv/helix/users",
 };
 
 export const [twitchAuth, setTwitchAuth] = createStore<TwitchAuthInfo>({
@@ -14,10 +15,12 @@ export const [twitchAuth, setTwitchAuth] = createStore<TwitchAuthInfo>({
 });
 
 export const getTwitchAuthToken = async () => {
-  const token = await getTwitchAuth();
-  if (token && twitchAuth.access_token !== token.access_token) {
-    setTwitchAuth(token);
-  }
+    if (!twitchAuth.access_token) {
+      const token = await getTwitchAuth();
+      if (token) {
+        setTwitchAuth(token);
+      }
+    }
 };
 
 export const generateUUID = () => {
