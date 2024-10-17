@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lutaok/solid-modal": "^0.1.1",
     "@solid-primitives/context": "^0.2.3",
     "@solidjs/router": "^0.14.1",
     "autoprefixer": "^10.4.19",
