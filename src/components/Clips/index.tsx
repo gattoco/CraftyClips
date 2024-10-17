@@ -8,6 +8,7 @@ import {
   FaSolidArrowDown,
   FaSolidSpinner,
 } from "solid-icons/fa";
+import { BsGrid3x3Gap, BsList } from "solid-icons/bs"; //listing layout for laters
 import { VsRefresh } from "solid-icons/vs";
 import Modal from "@lutaok/solid-modal";
 
@@ -96,7 +97,10 @@ const ClipSearchModal = () => {
         </div>
 
         <Show when={clipResult() !== undefined}>
-          <ClipsList clips={clipResult() ? [clipResult() as TwitchClip] : []} />
+          <ClipsList
+            clips={clipResult() ? [clipResult() as TwitchClip] : []}
+            layout="list"
+          />
         </Show>
       </Show>
 
@@ -142,6 +146,7 @@ const Clips = () => {
   const [sortOrder, setSortOrder] = createSignal<string>("desc");
   const [filterGameId, setFilterGameId] = createSignal<string>("");
   const [isModalOpen, setIsModalOpen] = createSignal<boolean>(false);
+  const [layoutType, setLayoutType] = createSignal<"grid" | "list">("grid");
 
   // Function to sort and filter clips
   const resetFilters = (clips?: TwitchClip[]) => {
@@ -160,7 +165,7 @@ const Clips = () => {
     const clips = await fetchClips();
     if (clips) {
       setState("clips", clips);
-      setState("clipsUpdated", Date.now()); // Store the current timestamp
+      setState("clipsUpdated", Date.now());
     }
     filterAndSortClips();
 
@@ -247,8 +252,6 @@ const Clips = () => {
           </div>
         </Show>
       </div>
-
-      <div class="mb-6"></div>
 
       <div class="mb-6">
         <span class="font-semibold block mb-2">Filters</span>
@@ -342,6 +345,32 @@ const Clips = () => {
               )}
             </button>
           </div>
+          {/* <div class="flex space-x-2 items-center">
+            <button
+              class={`py-1 px-3 rounded-full flex items-center space-x-2 
+                        ${
+                        layoutType() === "grid"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                        }
+                    `}
+              onClick={() => setLayoutType("grid")}
+            >
+              <BsGrid3x3Gap />
+            </button>
+            <button
+              class={`py-1 px-3 rounded-full flex items-center space-x-2 
+                        ${
+                        layoutType() === "list"
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-700"
+                        }
+                    `}
+              onClick={() => setLayoutType("list")}
+            >
+              <BsList />
+            </button>
+          </div> */}
         </div>
       </div>
 
@@ -353,12 +382,13 @@ const Clips = () => {
           </div>
         }
       >
-        <ClipsList clips={filteredClips()} />
+        <ClipsList clips={filteredClips()} layout={layoutType()} />
       </Show>
 
       <Modal
         isOpen={isModalOpen()}
         onCloseRequest={() => setIsModalOpen(false)}
+        closeOnOutsideClick
       >
         <ClipSearchModal />
       </Modal>
