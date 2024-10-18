@@ -40,7 +40,7 @@ const getDataFromApi = async <T>(
       const response = await axios.get<TwitchApiResponse<T>>(url, {
         headers: {
           "Client-ID": import.meta.env.VITE_TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${twitchAuthState.access_token}`, 
+          Authorization: `Bearer ${twitchAuthState.access_token}`,
         },
         params: {
           ...params,
@@ -66,17 +66,16 @@ const getDataFromApi = async <T>(
   }
 };
 
+const gameDetailsCache = new Map<string, TwitchGame>();
+
 const enrichClipsWithExtraDetails = async (
   clips: TwitchClip[]
 ): Promise<TwitchClip[]> => {
-  const gameDetailsCache: Record<string, TwitchGame> = {};
   const enrichedClips = await Promise.all(
     clips.map(async (clip) => {
-      if (clip.game_id && !gameDetailsCache[clip.game_id]) {
-        const gameDetails = await fetchGameDetails(clip.game_id);
-        if (gameDetails) gameDetailsCache[clip.game_id] = gameDetails;
+      if (clip.game_id) {
+        clip.game = await fetchGameDetails(clip.game_id);
       }
-      clip.game = gameDetailsCache[clip.game_id] || null;
       clip.added_at = clip.created_at;
       return clip;
     })
@@ -85,12 +84,12 @@ const enrichClipsWithExtraDetails = async (
   return enrichedClips;
 };
 
-const gameDetailsCache: Record<string, TwitchGame> = {};
-
-const fetchGameDetails = async (gameId: string): Promise<TwitchGame | null> => {
+const fetchGameDetails = async (
+  gameId: string
+): Promise<TwitchGame | undefined> => {
   try {
-    if (gameDetailsCache[gameId]) {
-      return gameDetailsCache[gameId];
+    if (gameDetailsCache.has(gameId)) {
+      return gameDetailsCache.get(gameId);
     }
 
     const [games] = await getDataFromApi<TwitchGame>(TwitchApiEndpoints.GAMES, {
@@ -98,14 +97,14 @@ const fetchGameDetails = async (gameId: string): Promise<TwitchGame | null> => {
     });
 
     if (games?.length) {
-      gameDetailsCache[gameId] = games[0];
+      gameDetailsCache.set(gameId, games[0]);
       return games[0];
     }
 
-    return null;
+    return undefined;
   } catch (error) {
     console.error(`Error fetching game details for game ID: ${gameId}`, error);
-    return null;
+    return undefined;
   }
 };
 
