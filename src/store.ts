@@ -1,4 +1,5 @@
 import { createContextProvider } from "@solid-primitives/context";
+import { createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
 
 interface AppState {
@@ -23,23 +24,38 @@ const devData: Partial<AppState> = {
   show: true,
 };
 
-export const [ContextProvider, useState] = createContextProvider(
-  () => {
-    const inital =
-      import.meta.env.MODE === "development"
-        ? { ...INITIAL_STATE, ...devData }
-        : INITIAL_STATE;
-    const [state, setState] = createStore<AppState>(inital);
-    return {
-      state,
-      setState,
-    };
-  },
-  {
-    state: INITIAL_STATE,
-    setState: () => {},
-  }
-);
+function persistStateToLocalStorage(state: AppState) {
+  localStorage.setItem("state", JSON.stringify(state));
+}
+
+function loadStateFromLocalStorage(): AppState | null {
+  const storedState = localStorage.getItem("state");
+  return storedState ? JSON.parse(storedState) : null;
+}
+
+export const [ContextProvider, useState] = createContextProvider(() => {
+  const storedState = loadStateFromLocalStorage();
+  
+  const initialState = import.meta.env.MODE === "development"
+    ? { ...INITIAL_STATE, ...devData }
+    : storedState || INITIAL_STATE;
+
+  const [state, setState] = createStore<AppState>(initialState);
+
+  createEffect(() => {
+    persistStateToLocalStorage(state);
+  });
+
+  return {
+    state,
+    setState,
+  };
+},
+{
+  state: INITIAL_STATE,
+  setState: () => {}
+});
+
 
 // clips: [{
 //     "id": "StormyDrabInternPartyTime-3IaQrlGNRsscQU08",

@@ -14,46 +14,34 @@ const App = (props: any) => {
   const { state, setState } = useState();
 
   const checkClipsLastUpdated = async () => {
-    const storedState = localStorage.getItem("state");
-    if (storedState) {
-      const parsedState = JSON.parse(storedState);
-      setState(parsedState);
-    }
-
     const ONE_HOUR = 3600 * 1000;
     const lastUpdated = state.clipsUpdated;
-
+  
     if (!lastUpdated || Date.now() - lastUpdated > ONE_HOUR) {
       const [clips, cursor] = await fetchClips(
         state.broadcaster_id,
         50,
         state.clipsCursor
       );
-
+  
       if (clips) {
-        setState((prevState) => ({
+        const uniqueClips = clips.filter(
+          (newClip) => !state.clips.some((existingClip) => existingClip.id === newClip.id)
+        );
+  
+        setState({
           clipsCursor: cursor,
-          clips: [...prevState.clips, ...clips],
+          clips: [...state.clips, ...uniqueClips], 
           clipsUpdated: Date.now(),
-        }));
+        });
       }
     }
   };
-
-  const saveStateToLocalStorage = () => {
-    localStorage.setItem("state", JSON.stringify(state));
-  };
-
+  
   onMount(() => {
     checkClipsLastUpdated();
-
-    window.addEventListener("beforeunload", saveStateToLocalStorage);
-
-    onCleanup(() => {
-      window.removeEventListener("beforeunload", saveStateToLocalStorage);
-      saveStateToLocalStorage();
-    });
   });
+  
 
   return (
     <div class="h-screen flex flex-col">

@@ -8,17 +8,31 @@ export const TwitchApiEndpoints = {
   USERS: "https://api.twitch.tv/helix/users",
 };
 
-export const [twitchAuth, setTwitchAuth] = createStore<TwitchAuthInfo>({
-  access_token: "",
-  token_type: "",
-  scope: "",
-});
+export const [twitchAuthState, setTwitchAuthState] =
+  createStore<TwitchAuthInfo>({
+    access_token: "",
+    token_type: "",
+    expires_in: 0,
+    expires_at: 0,
+    scope: "",
+  });
 
 export const getTwitchAuthToken = async () => {
-  if (!twitchAuth.access_token) {
-    const token = await getTwitchAuth();
-    if (token) {
-      setTwitchAuth(token);
+  const currentTime = Math.floor(Date.now() / 1000); 
+  if (
+    !twitchAuthState.access_token ||
+    twitchAuthState.expires_at <= currentTime
+  ) {
+    const tokenResponse = await getTwitchAuth();
+    if (tokenResponse) {
+      const expirationTime = currentTime + tokenResponse.expires_in; 
+
+      setTwitchAuthState({
+        access_token: tokenResponse.access_token,
+        token_type: tokenResponse.token_type,
+        expires_in: tokenResponse.expires_in,
+        expires_at: expirationTime, 
+      });
     }
   }
 };

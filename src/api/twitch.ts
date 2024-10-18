@@ -1,6 +1,13 @@
 import axios from "axios";
-import { twitchAuth, TwitchApiEndpoints } from "../store/config";
+import { twitchAuthState, getTwitchAuthToken } from "../store/config";
+import { TwitchApiEndpoints } from "../store/config";
 
+interface TwitchApiResponse<T> {
+  data: T[];
+  pagination?: {
+    cursor?: string;
+  };
+}
 const getTwitchAuth = async () => {
   try {
     const response = await axios.post(TwitchApiEndpoints.AUTH, null, {
@@ -16,12 +23,6 @@ const getTwitchAuth = async () => {
     throw error;
   }
 };
-interface TwitchApiResponse<T> {
-  data: T[];
-  pagination?: {
-    cursor?: string;
-  };
-}
 
 const getDataFromApi = async <T>(
   url: string,
@@ -30,9 +31,7 @@ const getDataFromApi = async <T>(
   initialCursor?: string | undefined
 ): Promise<[T[], string | undefined]> => {
   try {
-    if (!twitchAuth.access_token) {
-      throw new Error("No access token available");
-    }
+    await getTwitchAuthToken();
 
     let allData: T[] = [];
     let cursor: string | undefined = initialCursor;
@@ -41,7 +40,7 @@ const getDataFromApi = async <T>(
       const response = await axios.get<TwitchApiResponse<T>>(url, {
         headers: {
           "Client-ID": import.meta.env.VITE_TWITCH_CLIENT_ID,
-          Authorization: `Bearer ${twitchAuth.access_token}`,
+          Authorization: `Bearer ${twitchAuthState.access_token}`, 
         },
         params: {
           ...params,
@@ -53,7 +52,6 @@ const getDataFromApi = async <T>(
       const pagination = response.data.pagination;
 
       allData = [...allData, ...responseData];
-
       cursor = pagination?.cursor || undefined;
 
       if (!fetchAll) {
