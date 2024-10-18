@@ -15,12 +15,12 @@ export const [twitchAuth, setTwitchAuth] = createStore<TwitchAuthInfo>({
 });
 
 export const getTwitchAuthToken = async () => {
-    if (!twitchAuth.access_token) {
-      const token = await getTwitchAuth();
-      if (token) {
-        setTwitchAuth(token);
-      }
+  if (!twitchAuth.access_token) {
+    const token = await getTwitchAuth();
+    if (token) {
+      setTwitchAuth(token);
     }
+  }
 };
 
 export const generateUUID = () => {

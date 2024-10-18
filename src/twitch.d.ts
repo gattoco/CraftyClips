@@ -8,9 +8,9 @@ interface Page {
 }
 
 interface TwitchAuthInfo {
-    access_token: string;
-    token_type: string;
-    scope: string;
+  access_token: string;
+  token_type: string;
+  scope: string;
 }
 interface TwitchClip {
   id: string;
@@ -27,10 +27,12 @@ interface TwitchClip {
   title: string;
   view_count: number;
   created_at: string;
+  added_at: string;
   thumbnail_url: string;
   duration: number;
   vod_offset: any;
   is_featured: any;
+  visible?: boolean;
 }
 interface TwitchGame {
   box_art_url: string;
@@ -71,4 +73,3 @@ interface ClipQueue {
   name: string;
   clips: string[];
 }
-

@@ -7,14 +7,14 @@ import { generateUUID, TwitchApiEndpoints } from "../../store/config";
 const ClipManager = () => {
   const { state, setState } = useState();
   const [queues, setQueues] = createSignal<ClipQueue[]>(state.clipQueue ?? []);
-  const [selectedQueueId, setSelectedQueueId] = createSignal<string | null>("all"); // Updated to use id instead of name
+  const [selectedQueueId, setSelectedQueueId] = createSignal<string | null>("all"); 
   const [newQueueName, setNewQueueName] = createSignal('');
   const [showClipSelector, setShowClipSelector] = createSignal(false);
   const [newClipURL, setNewClipURL] = createSignal('');
 
   const getClipsForQueue = (queueId: string | null) => {
     if (queueId === "all") return state.clips;
-    const queue = queues().find((q) => q.id === queueId); // Find queue by id instead of name
+    const queue = queues().find((q) => q.id === queueId); 
     return queue
       ? queue.clips
           .map((id) => state.clips.find((clip) => clip.id === id))
@@ -40,7 +40,7 @@ const ClipManager = () => {
   const createClipQueue = () => {
     const name = newQueueName().trim();
     if (name) {
-      setQueues([...queues(), { name, clips: [], id: generateUUID() }]); // UUID for queue id
+      setQueues([...queues(), { name, clips: [], id: generateUUID() }]);
       setNewQueueName('');
     }
   };
@@ -48,7 +48,7 @@ const ClipManager = () => {
   const fetchClipByURL = async (url: string) => {
     try {
       const clipId = extractClipIdFromURL(url);
-      const clipData = await getDataFromApi(TwitchApiEndpoints.CLIPS, { id: clipId });
+      const [clipData] = await getDataFromApi<TwitchClip>(TwitchApiEndpoints.CLIPS, { id: clipId });
       if (clipData.length) {
         setState('clips', [...state.clips, clipData[0]]);
       }

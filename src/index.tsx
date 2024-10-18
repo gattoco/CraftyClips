@@ -2,9 +2,9 @@ import { For, render } from "solid-js/web";
 import { Router, Route, A } from "@solidjs/router";
 import "./index.css";
 import { pages } from "./store/navigation";
-import { ContextProvider, useState } from "./store";
+import { ContextProvider, useState, INITIAL_STATE } from "./store";
 import { fetchClips } from "./components/util";
-import { onMount } from "solid-js";
+import { createEffect, onCleanup, onMount } from "solid-js";
 import { getTwitchAuthToken } from "./store/config";
 
 const root = document.getElementById("root");
@@ -13,29 +13,62 @@ const base = import.meta.env.MODE === "github-pages" ? "/CraftyClips" : "/";
 const App = (props: any) => {
   const { state, setState } = useState();
 
-    // Function to check if the clips need refreshing
-    const checkClipsLastUpdated = async () => {
-      const ONE_HOUR = 3600 * 1000; // 1 hour in milliseconds
-      const lastUpdated = state.clipsUpdated;
-  
-      if (!lastUpdated || Date.now() - lastUpdated > ONE_HOUR) {
-        const clips = await fetchClips(); // Fetch clips if it's been more than an hour
-        if (clips) {
-          setState("clips", clips);
-        }
-        setState("clipsUpdated", Date.now()); // Store the current timestamp
-      } 
-    };
-  
-    // Run the check on app load
-    onMount(async () => {
-      checkClipsLastUpdated();
+  const checkClipsLastUpdated = async () => {
+    const storedState = localStorage.getItem("state");
+    if (storedState) {
+      const parsedState = JSON.parse(storedState);
+      setState(parsedState);
+    }
+
+    const ONE_HOUR = 3600 * 1000;
+    const lastUpdated = state.clipsUpdated;
+
+    if (!lastUpdated || Date.now() - lastUpdated > ONE_HOUR) {
+      const [clips, cursor] = await fetchClips(
+        state.broadcaster_id,
+        50,
+        state.clipsCursor
+      );
+
+      if (clips) {
+        setState((prevState) => ({
+          clipsCursor: cursor,
+          clips: [...prevState.clips, ...clips],
+          clipsUpdated: Date.now(),
+        }));
+      }
+    }
+  };
+
+  const saveStateToLocalStorage = () => {
+    localStorage.setItem("state", JSON.stringify(state));
+  };
+
+  onMount(() => {
+    checkClipsLastUpdated();
+
+    window.addEventListener("beforeunload", saveStateToLocalStorage);
+
+    onCleanup(() => {
+      window.removeEventListener("beforeunload", saveStateToLocalStorage);
+      saveStateToLocalStorage();
     });
-  
+  });
+
   return (
     <div class="h-screen flex flex-col">
       <header class="bg-gray-800 text-white p-4 text-xl font-bold">
         Crafty Clips
+        <button
+          class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+          onClick={() => {
+            localStorage.clear();
+            setState(INITIAL_STATE);
+            window.location.reload();
+          }}
+        >
+          Reset State
+        </button>
       </header>
 
       <div class="flex flex-1">
@@ -44,21 +77,31 @@ const App = (props: any) => {
             <For each={pages.filter((page) => !page.hidden)}>
               {(page) => (
                 <>
-                  {/* Check if the page has a URL to decide if it should be a link or just a heading */}
                   {!page.children ? (
-                    <A href={`${page.url}`} end={page.url === "/"} class="block p-2 rounded hover:bg-gray-200">
+                    <A
+                      href={`${page.url}`}
+                      end={page.url === "/"}
+                      class="block p-2 rounded hover:bg-gray-200"
+                    >
                       {page.name}
                     </A>
                   ) : (
-                    <A href={`${page.url}/${page.children?.[0].url}`} class="block p-2 rounded hover:bg-gray-200">
+                    <A
+                      href={`${page.url}/${page.children?.[0].url}`}
+                      class="block p-2 rounded hover:bg-gray-200"
+                    >
                       {page.name}
                     </A>
                   )}
 
-                  {/* Render children if present */}
-                  <For each={page.children?.filter((page) => !page.hidden) ?? []}>
+                  <For
+                    each={page.children?.filter((page) => !page.hidden) ?? []}
+                  >
                     {(child) => (
-                      <A href={`${page.url}/${child.url}`} class="block ml-4 p-2 rounded hover:bg-gray-200">
+                      <A
+                        href={`${page.url}/${child.url}`}
+                        class="block ml-4 p-2 rounded hover:bg-gray-200"
+                      >
                         {child.name}
                       </A>
                     )}
@@ -75,8 +118,6 @@ const App = (props: any) => {
   );
 };
 
-
-
 render(
   () => (
     <ContextProvider>
@@ -86,7 +127,12 @@ render(
             <>
               <Route path={page.url} component={page.component} />
               <For each={page.children ?? []}>
-                {(child) => <Route path={`${page.url}/${child.url}`} component={child.component} />}
+                {(child) => (
+                  <Route
+                    path={`${page.url}/${child.url}`}
+                    component={child.component}
+                  />
+                )}
               </For>
             </>
           )}

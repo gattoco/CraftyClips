@@ -1,7 +1,6 @@
-import { createSignal, onMount, Show, For } from "solid-js";
+import { createSignal, onMount, Show, For, createEffect } from "solid-js";
 import { useState } from "../../store";
 import { fetchClips, fetchUsers, fetchClipById } from "../util";
-
 import ClipsList from "./List";
 import {
   FaSolidArrowUp,
@@ -16,11 +15,16 @@ const ClipSearchModal = () => {
   const [usersName, setUsersName] = createSignal<string>("");
   const [userResult, setUserResult] = createSignal<TwitchUser>();
   const [clipUrl, setClipUrl] = createSignal<string>("");
-  const [clipResult, setClipResult] = createSignal<TwitchClip>();
+  const [clipResult, setClipResult] = createSignal<TwitchClip[]>();
+  const [clipsCursor, setClipsCursor] = createSignal<string | null | undefined>(
+    null
+  );
+  const [buttonLoading, setButtonLoading] = createSignal<boolean>(false);
 
   const [type, setType] = createSignal<string>("url");
   const getUserResults = async () => {
     const user = await fetchUsers(usersName());
+    console.log(user);
     if (!user) {
       return;
     }
@@ -37,11 +41,11 @@ const ClipSearchModal = () => {
     if (!clip) {
       return;
     }
-    setClipResult(clip[0]);
+    setClipResult(clip);
   };
 
   return (
-    <div class="mb-6 relative">
+    <div class="mb-6 relative p-4 w-[30rem]">
       <h2 class="font-bold mb-2">Add clips by:</h2>
       <div class="flex items-center space-x-4 mb-4">
         <label
@@ -57,7 +61,10 @@ const ClipSearchModal = () => {
             value="url"
             class="hidden"
             checked={type() === "url"}
-            onChange={() => setType("url")}
+            onChange={() => {
+              setType("url");
+              setClipResult();
+            }}
           />
           URL
         </label>
@@ -74,7 +81,10 @@ const ClipSearchModal = () => {
             value="broadcaster"
             class="hidden"
             checked={type() === "broadcaster"}
-            onChange={() => setType("broadcaster")}
+            onChange={() => {
+              setType("broadcaster");
+              setClipResult();
+            }}
           />
           Broadcaster
         </label>
@@ -89,19 +99,20 @@ const ClipSearchModal = () => {
             class="p-2 border rounded mr-2 w-full"
           />
           <button
-            class="py-1 px-4 rounded-full bg-green-500 text-white"
+            class="py-1 px-4 my-2 rounded-full bg-green-500 text-white"
             onClick={clipSearch}
           >
             Search for Clip
           </button>
-        </div>
 
-        <Show when={clipResult() !== undefined}>
-          <ClipsList
-            clips={clipResult() ? [clipResult() as TwitchClip] : []}
-            layout="list"
-          />
-        </Show>
+          <Show when={clipResult() && clipResult()!.length > 0}>
+            <ClipsList
+              clips={clipResult() ? [clipResult()?.[0] as TwitchClip] : []}
+              layout="list"
+              withButtons={["add", "remove"]}
+            />
+          </Show>
+        </div>
       </Show>
 
       <Show when={type() === "broadcaster"}>
@@ -114,25 +125,62 @@ const ClipSearchModal = () => {
             class="p-2 border rounded mr-2 w-full"
           />
           <button
-            class="py-1 px-4 rounded-full bg-green-500 text-white"
+            class="py-1 px-4 my-2 rounded-full bg-green-500 text-white"
             onClick={getUserResults}
           >
             Search for Broadcaster
           </button>
-        </div>
 
-        <Show when={userResult()}>
-          <div class="flex items-center space-x-4 absolute bg-white p-2 hover:bg-gray-200 rounded-lg shadow">
-            <img
-              src={userResult()?.profile_image_url}
-              alt={userResult()?.display_name}
-              class="w-12 h-12 rounded-full"
-            />
-            <div>
-              <p class="font-semibold">{userResult()?.display_name}</p>
+          <Show when={userResult()}>
+            <div class="flex items-center space-x-4 bg-white p-2 hover:bg-gray-200 rounded-lg">
+              <img
+                src={userResult()?.profile_image_url}
+                alt={userResult()?.display_name}
+                class="w-12 h-12 rounded-full"
+              />
+              <div>
+                <p class="font-semibold">{userResult()?.display_name}</p>
+              </div>
+              <div class="buttons">
+                <a
+                  class="py-1 px-4 rounded-full bg-purple-500 text-white"
+                  href={`https://www.twitch.tv/${userResult()?.login}`}
+                  target="_blank"
+                >
+                  View on Twitch
+                </a>
+                <button
+                  class="py-1 px-4 rounded-full bg-green-500 text-white"
+                  onClick={async () => {
+                    if (!userResult()?.id) return;
+                    setButtonLoading(true);
+                    const [clips, cursor] = await fetchClips(userResult()?.id);
+                    if (clips) {
+                      setClipsCursor(cursor);
+                      setClipResult(clips);
+                    }
+                    setButtonLoading(false);
+                  }}
+                >
+                  {buttonLoading() ? (
+                    <FaSolidSpinner class="animate-spin text-xl" />
+                  ) : (
+                    "Get Clips"
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-        </Show>
+            <Show when={clipResult() && clipResult()!.length > 0}>
+              <div class="flex max-h-[22rem] overflow-auto">
+                <ClipsList
+                  clips={clipResult()!}
+                  layout="list"
+                  withButtons={["add", "remove"]}
+                />
+              </div>
+            </Show>
+          </Show>
+        </div>
       </Show>
     </div>
   );
@@ -142,35 +190,39 @@ const Clips = () => {
   const { state, setState } = useState();
   const [filteredClips, setFilteredClips] = createSignal<TwitchClip[]>([]);
   const [loading, setLoading] = createSignal<boolean>(true);
-  const [sortField, setSortField] = createSignal<string>("created_at");
+  const [sortField, setSortField] = createSignal<string>("added_at");
   const [sortOrder, setSortOrder] = createSignal<string>("desc");
   const [filterGameId, setFilterGameId] = createSignal<string>("");
   const [isModalOpen, setIsModalOpen] = createSignal<boolean>(false);
   const [layoutType, setLayoutType] = createSignal<"grid" | "list">("grid");
 
-  // Function to sort and filter clips
   const resetFilters = (clips?: TwitchClip[]) => {
     if (!clips) {
       clips = state.clips;
     }
     const sortedClips = sortClips(clips, sortField(), "desc");
     setFilteredClips(sortedClips);
-    setSortField("created_at");
+    setSortField("added_at");
     setSortOrder("desc");
     setFilterGameId("");
   };
 
   const refreshClips = async () => {
     setLoading(true);
-    const clips = await fetchClips();
+    const [clips, cursor] = await fetchClips(state.broadcaster_id, 50);
+
     if (clips) {
-      setState("clips", clips);
-      setState("clipsUpdated", Date.now());
+      setState((prevState) => ({
+        clipsCursor: cursor,
+        clips: [...prevState.clips, ...clips],
+        clipsUpdated: Date.now(),
+      }));
     }
     filterAndSortClips();
 
     setLoading(false);
   };
+
   const shouldRefreshStaleData = () => {
     const ONE_HOUR = 3600 * 1000;
     const lastUpdated = state.clipsUpdated;
@@ -190,7 +242,11 @@ const Clips = () => {
   const sortClips = (clips: TwitchClip[], field: string, order: string) => {
     return [...clips].sort((a, b) => {
       let comparison = 0;
-      if (field === "created_at" || field === "duration") {
+      if (
+        field === "added_at" ||
+        field === "created_at" ||
+        field === "duration"
+      ) {
         comparison =
           new Date(a[field] as string).getTime() -
           new Date(b[field] as string).getTime();
@@ -225,6 +281,10 @@ const Clips = () => {
     filterAndSortClips();
   };
 
+  createEffect(() => {
+    filterAndSortClips();
+  }, [state.clips, sortField(), sortOrder(), filterGameId()]);
+
   return (
     <div class="container mx-auto p-4">
       <div class="flex justify-between items-center">
@@ -252,128 +312,6 @@ const Clips = () => {
           </div>
         </Show>
       </div>
-
-      <div class="mb-6">
-        <span class="font-semibold block mb-2">Filters</span>
-        <div class="flex flex-wrap items-center space-x-4">
-          <div class="flex space-x-2">
-            <label
-              class={`cursor-pointer py-1 px-3 rounded-full ${
-                sortField() === "created_at"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              <input
-                type="radio"
-                name="sort"
-                value="created_at"
-                class="hidden"
-                checked={sortField() === "created_at"}
-                onChange={() => handleSortChange("created_at")}
-              />
-              Created At
-            </label>
-            <label
-              class={`cursor-pointer py-1 px-3 rounded-full ${
-                sortField() === "view_count"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              <input
-                type="radio"
-                name="sort"
-                value="view_count"
-                class="hidden"
-                checked={sortField() === "view_count"}
-                onChange={() => handleSortChange("view_count")}
-              />
-              View Count
-            </label>
-            <label
-              class={`cursor-pointer py-1 px-3 rounded-full ${
-                sortField() === "duration"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              <input
-                type="radio"
-                name="sort"
-                value="duration"
-                class="hidden"
-                checked={sortField() === "duration"}
-                onChange={() => handleSortChange("duration")}
-              />
-              Duration
-            </label>
-          </div>
-
-          <div>
-            <select
-              id="gameFilter"
-              onChange={handleGameIdFilterChange}
-              class="p-2 border rounded"
-            >
-              <option value="">All Games</option>
-              <For
-                each={Array.from(
-                  new Set(state.clips.map((clip) => clip.game?.name))
-                )}
-              >
-                {(game) => <option value={game}>{game}</option>}
-              </For>
-            </select>
-          </div>
-
-          <div class="flex space-x-2 items-center">
-            <button
-              class="py-1 px-3 rounded-full flex items-center space-x-2 bg-blue-500 text-white"
-              onClick={() =>
-                handleSortOrderChange(sortOrder() === "asc" ? "desc" : "asc")
-              }
-            >
-              {sortOrder() === "asc" ? (
-                <>
-                  <FaSolidArrowUp /> <span>Oldest</span>
-                </>
-              ) : (
-                <>
-                  <FaSolidArrowDown /> <span>Latest</span>
-                </>
-              )}
-            </button>
-          </div>
-          {/* <div class="flex space-x-2 items-center">
-            <button
-              class={`py-1 px-3 rounded-full flex items-center space-x-2 
-                        ${
-                        layoutType() === "grid"
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200 text-gray-700"
-                        }
-                    `}
-              onClick={() => setLayoutType("grid")}
-            >
-              <BsGrid3x3Gap />
-            </button>
-            <button
-              class={`py-1 px-3 rounded-full flex items-center space-x-2 
-                        ${
-                        layoutType() === "list"
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200 text-gray-700"
-                        }
-                    `}
-              onClick={() => setLayoutType("list")}
-            >
-              <BsList />
-            </button>
-          </div> */}
-        </div>
-      </div>
-
       <Show
         when={!loading()}
         fallback={
@@ -382,7 +320,130 @@ const Clips = () => {
           </div>
         }
       >
-        <ClipsList clips={filteredClips()} layout={layoutType()} />
+        <div class="mb-6">
+          <span class="font-semibold block mb-2">Filters</span>
+          <div class="flex flex-wrap items-center space-x-4">
+            <div class="flex space-x-2">
+              <label
+                class={`cursor-pointer py-1 px-3 rounded-full ${
+                  sortField() === "added_at"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="sort"
+                  value="added_at"
+                  class="hidden"
+                  checked={sortField() === "added_at"}
+                  onChange={() => handleSortChange("added_at")}
+                />
+                Added At
+              </label>
+              <label
+                class={`cursor-pointer py-1 px-3 rounded-full ${
+                  sortField() === "created_at"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="sort"
+                  value="created_at"
+                  class="hidden"
+                  checked={sortField() === "created_at"}
+                  onChange={() => handleSortChange("created_at")}
+                />
+                Created At
+              </label>
+              <label
+                class={`cursor-pointer py-1 px-3 rounded-full ${
+                  sortField() === "view_count"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="sort"
+                  value="view_count"
+                  class="hidden"
+                  checked={sortField() === "view_count"}
+                  onChange={() => handleSortChange("view_count")}
+                />
+                View Count
+              </label>
+              <label
+                class={`cursor-pointer py-1 px-3 rounded-full ${
+                  sortField() === "duration"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="sort"
+                  value="duration"
+                  class="hidden"
+                  checked={sortField() === "duration"}
+                  onChange={() => handleSortChange("duration")}
+                />
+                Duration
+              </label>
+            </div>
+
+            <div>
+              <select
+                id="gameFilter"
+                onChange={handleGameIdFilterChange}
+                class="p-2 border rounded"
+              >
+                <option value="">All Games</option>
+                <For
+                  each={Array.from(
+                    new Map(
+                      state.clips
+                        .filter((clip) => clip.game?.id && clip.game?.name)
+                        .map((clip) => [
+                          clip.game?.id,
+                          { id: clip.game?.id, name: clip.game?.name },
+                        ])
+                    ).values()
+                  )}
+                >
+                  {(game) => <option value={game.id}>{game.name}</option>}
+                </For>
+              </select>
+            </div>
+
+            <div class="flex space-x-2 items-center">
+              <button
+                class="py-1 px-3 rounded-full flex items-center space-x-2 bg-blue-500 text-white"
+                onClick={() =>
+                  handleSortOrderChange(sortOrder() === "asc" ? "desc" : "asc")
+                }
+              >
+                {sortOrder() === "asc" ? (
+                  <>
+                    <FaSolidArrowUp /> <span>Oldest</span>
+                  </>
+                ) : (
+                  <>
+                    <FaSolidArrowDown /> <span>Latest</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ClipsList
+          clips={filteredClips()}
+          layout={layoutType()}
+          withButtons={["visible"]}
+        />
       </Show>
 
       <Modal

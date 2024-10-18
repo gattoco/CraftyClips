@@ -5,7 +5,7 @@ const Clips = lazy(() => import("../components/Clips"));
 const ClipManager = lazy(() => import("../components/ClipManager"));
 const ClipQueue = lazy(() => import("../components/ClipQueue"));
 
-export const pages:Page[] = [
+export const pages: Page[] = [
   {
     name: "Home",
     url: "/",
@@ -19,7 +19,7 @@ export const pages:Page[] = [
       {
         name: "Library",
         url: "library",
-        component: Clips, 
+        component: Clips,
       },
       {
         name: "Clip Manager",

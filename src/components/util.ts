@@ -1,13 +1,14 @@
-import { enrichClipsWithGameDetails, getDataFromApi } from "../api/twitch";
+import { enrichClipsWithExtraDetails, getDataFromApi } from "../api/twitch";
 import { getTwitchAuthToken, TwitchApiEndpoints } from "../store/config";
 
-const clipByBroadcaster = { broadcaster_id: 985378831, first: 50 };
 const FETCH_NUMBER_OF_CLIPS = 100;
 
 const fetchClipById = async (clipId: string) => {
   try {
     await getTwitchAuthToken();
-    const clip = await getDataFromApi(TwitchApiEndpoints.CLIPS, { id: clipId });
+    const [clip] = await getDataFromApi<TwitchClip>(TwitchApiEndpoints.CLIPS, {
+      id: clipId,
+    });
     return clip;
   } catch (error) {
     console.error("Error fetching Twitch data:", error);
@@ -16,34 +17,45 @@ const fetchClipById = async (clipId: string) => {
 };
 
 const fetchClips = async (
-  pBroadcasterId: number = 985378831,
-  pNumberOfClips: number = FETCH_NUMBER_OF_CLIPS
-) => {
-  try {
-    await getTwitchAuthToken();
+  pBroadcasterId: string = "985378831",
+  pNumberOfClips: number = FETCH_NUMBER_OF_CLIPS,
+  pCursor: string | undefined = undefined
+): Promise<[TwitchClip[], string | undefined]> => {
+  await getTwitchAuthToken();
 
-    const allClips = await getDataFromApi(TwitchApiEndpoints.CLIPS, {
+  const [allClips, cursor] = await getDataFromApi<TwitchClip>(
+    TwitchApiEndpoints.CLIPS,
+    {
       broadcaster_id: pBroadcasterId,
       first: pNumberOfClips,
-    });
-    const enrichedClips = await enrichClipsWithGameDetails(allClips);
+    },
+    false,
+    pCursor
+  );
 
-    return enrichedClips;
-  } catch (error) {
-    console.error("Error fetching Twitch data:", error);
-    return null;
-  }
+  const enrichedClips = await enrichClipsWithExtraDetails(allClips.reverse());
+
+  return [enrichedClips, cursor];
 };
 
-const fetchUsers = async (pBroadcasterName: string) => {
+const fetchUsers = async (
+  pBroadcasterName: string
+): Promise<TwitchUser | null> => {
   try {
     await getTwitchAuthToken();
 
-    const broadcaster = await getDataFromApi(TwitchApiEndpoints.USERS, {
-      login: pBroadcasterName,
-    });
+    const [broadcasters] = await getDataFromApi<TwitchUser>(
+      TwitchApiEndpoints.USERS,
+      {
+        login: pBroadcasterName,
+      }
+    );
 
-    return broadcaster[0];
+    if (broadcasters && broadcasters.length > 0) {
+      return broadcasters[0];
+    }
+
+    return null;
   } catch (error) {
     console.error("Error fetching Twitch data:", error);
     return null;
