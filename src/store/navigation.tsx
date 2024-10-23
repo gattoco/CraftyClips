@@ -13,7 +13,7 @@ export const pages: Page[] = [
   },
   {
     name: "Clips",
-    url: "clips",
+    url: "/clips",
     component: Clips,
     children: [
       {
@@ -30,6 +30,7 @@ export const pages: Page[] = [
         name: "Clip Queue",
         url: "clipmanager/:id",
         component: ClipQueue,
+        layout: "none",
         hidden: true,
       },
     ],

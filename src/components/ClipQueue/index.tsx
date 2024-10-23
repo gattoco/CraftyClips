@@ -1,16 +1,25 @@
-import { createSignal, For, Show } from "solid-js";
 import { useState } from "../../store";
-import ClipsList from "../Clips/List";
-import { getDataFromApi } from "../../api/twitch";
-import { TwitchApiEndpoints } from "../../store/config";
+import ClipsEmbed from "../Clips/Embed";
 import { useParams } from "@solidjs/router";
 
 const ClipQueue = () => {
+  const { state, setState } = useState();
   const params = useParams();
+
+  const getClipsForQueue = (queueId: string | null) => {
+    if (!queueId) return state.clips;
+    const queue = state.clipQueue.find((q) => q.id === queueId);
+    if (!queue) return state.clips;
+    return queue.clips
+      .map((id) => state.clips.find((clip) => clip.id === id))
+      .filter((clip): clip is TwitchClip => Boolean(clip));
+  }
 
   return (
     <>
-      Ima clip queue with id of <code>{params.id}</code>
+      <div>
+        <ClipsEmbed clips={getClipsForQueue(params.id)} />
+      </div>
     </>
   );
 };

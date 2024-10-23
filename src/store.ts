@@ -17,11 +17,22 @@ export const INITIAL_STATE: AppState = {
   clipQueue: [],
   clipsUpdated: null,
   clipsCursor: undefined,
-  broadcaster_id: "985378831", // craftingchaosgaming hardcoded. will do something proper with auth later
+  broadcaster_id: "",
 };
 
 const devData: Partial<AppState> = {
   show: true,
+  clipQueue: [
+    {
+      name: "test",
+      clips: [
+        "FlaccidIntelligentBisonHumbleLife-CP0eLCrk9la_kzfu",
+        "HungryDrabMarjoramCharlietheUnicorn-KbfYLQCg9DI3jK3K",
+      ],
+      id: "0f37b791-a231-4933-953c-74a1b080f2e9",
+    },
+  ],
+  broadcaster_id: "985378831", // craftingchaosgaming hardcoded. will do something proper with auth later
 };
 
 function persistStateToLocalStorage(state: AppState) {

@@ -5,6 +5,7 @@ interface Page {
   hidden?: boolean;
   redirectTo?: string;
   children?: Page[];
+  layout?: string;
 }
 
 interface TwitchAuthInfo {

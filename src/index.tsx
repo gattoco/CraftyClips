@@ -2,123 +2,39 @@ import { For, render } from "solid-js/web";
 import { Router, Route, A } from "@solidjs/router";
 import "./index.css";
 import { pages } from "./store/navigation";
-import { ContextProvider, useState, INITIAL_STATE } from "./store";
-import { fetchClips } from "./components/util";
-import { createEffect, onCleanup, onMount } from "solid-js";
-import { getTwitchAuthToken } from "./store/config";
+import { ContextProvider } from "./store";
+import Layout from "./components/Layout"; 
 
 const root = document.getElementById("root");
 const base = import.meta.env.MODE === "github-pages" ? "/CraftyClips" : "/";
 
-const App = (props: any) => {
-  const { state, setState } = useState();
-
-  const checkClipsLastUpdated = async () => {
-    const ONE_HOUR = 3600 * 1000;
-    const lastUpdated = state.clipsUpdated;
-  
-    if (!lastUpdated || Date.now() - lastUpdated > ONE_HOUR) {
-      const [clips, cursor] = await fetchClips(
-        state.broadcaster_id,
-        50,
-        state.clipsCursor
+const LayoutWrapper = (layout: string = "default", Component: any) => {
+  return (props: any) => {
+    if (layout === "default") {
+      return (
+        <Layout>
+          <Component {...props} />
+        </Layout>
       );
-  
-      if (clips) {
-        const uniqueClips = clips.filter(
-          (newClip) => !state.clips.some((existingClip) => existingClip.id === newClip.id)
-        );
-  
-        setState({
-          clipsCursor: cursor,
-          clips: [...state.clips, ...uniqueClips], 
-          clipsUpdated: Date.now(),
-        });
-      }
+    } else {
+      return <Component {...props} />; 
     }
   };
-  
-  onMount(() => {
-    checkClipsLastUpdated();
-  });
-  
-
-  return (
-    <div class="h-screen flex flex-col">
-      <header class="bg-gray-800 text-white p-4 text-xl font-bold">
-        Crafty Clips
-        <button
-          class="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
-          onClick={() => {
-            localStorage.clear();
-            setState(INITIAL_STATE);
-            window.location.reload();
-          }}
-        >
-          Reset State
-        </button>
-      </header>
-
-      <div class="flex flex-1">
-        <aside class="w-64 bg-gray-100 p-4">
-          <nav class="space-y-4">
-            <For each={pages.filter((page) => !page.hidden)}>
-              {(page) => (
-                <>
-                  {!page.children ? (
-                    <A
-                      href={`${page.url}`}
-                      end={page.url === "/"}
-                      class="block p-2 rounded hover:bg-gray-200"
-                    >
-                      {page.name}
-                    </A>
-                  ) : (
-                    <A
-                      href={`${page.url}/${page.children?.[0].url}`}
-                      class="block p-2 rounded hover:bg-gray-200"
-                    >
-                      {page.name}
-                    </A>
-                  )}
-
-                  <For
-                    each={page.children?.filter((page) => !page.hidden) ?? []}
-                  >
-                    {(child) => (
-                      <A
-                        href={`${page.url}/${child.url}`}
-                        class="block ml-4 p-2 rounded hover:bg-gray-200"
-                      >
-                        {child.name}
-                      </A>
-                    )}
-                  </For>
-                </>
-              )}
-            </For>
-          </nav>
-        </aside>
-
-        <main class="flex-1 p-4 bg-white overflow-auto">{props.children}</main>
-      </div>
-    </div>
-  );
 };
 
 render(
   () => (
     <ContextProvider>
-      <Router base={base} root={App}>
+      <Router base={base}>
         <For each={pages}>
           {(page) => (
             <>
-              <Route path={page.url} component={page.component} />
+              <Route path={page.url} component={LayoutWrapper(page.layout, page.component)} />
               <For each={page.children ?? []}>
                 {(child) => (
                   <Route
                     path={`${page.url}/${child.url}`}
-                    component={child.component}
+                    component={LayoutWrapper(child.layout, child.component)}
                   />
                 )}
               </For>
