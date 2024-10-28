@@ -53,7 +53,7 @@ const getDataFromApi = async <T>(
 
       allData = [...allData, ...responseData];
       cursor = pagination?.cursor || undefined;
-      
+
       if (!fetchAll) {
         break;
       }
