@@ -17,7 +17,7 @@ export const INITIAL_STATE: AppState = {
   clipQueue: [],
   clipsUpdated: null,
   clipsCursor: undefined,
-  broadcaster_id: "",
+  broadcaster_id: "985378831",
 };
 
 const devData: Partial<AppState> = {
