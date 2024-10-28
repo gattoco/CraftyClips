@@ -211,6 +211,10 @@ const Clips = () => {
     setLoading(true);
     const [clips, cursor] = await fetchClips(state.broadcaster_id, 50);
 
+    const weirdclips = clips?.filter((clip) => clip.thumbnail_url.includes("static-cdn.jtvnw.net"));
+
+    console.log("weird clips", weirdclips);
+
     if (clips) {
       setState((prevState) => ({
         clipsCursor: cursor,
