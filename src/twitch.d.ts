@@ -76,3 +76,30 @@ interface ClipQueue {
   name: string;
   clips: string[];
 }
+
+interface TwitchTeamMember {
+  user_id: string;
+  user_login: string;
+  user_name: string;
+  stream?: {
+    title: string;
+    viewer_count: number;
+    game_id: string;
+    game_name: string;
+    type: string;
+    thumbnail_url: string;
+    started_at: string;
+  }
+}
+interface TwitchTeam {
+  background_image_url: string;
+  banner: string;
+  created_at: string;
+  id: string;
+  info: string;
+  team_display_name: string;
+  team_name: string;
+  thumbnail_url: string;
+  updated_at: string;
+  users: TwitchTeamMember[];
+}

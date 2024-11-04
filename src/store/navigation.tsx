@@ -33,6 +33,13 @@ export const pages: Page[] = [
         layout: "none",
         hidden: true,
       },
+      {
+        name: "BRB",
+        url: "clipmanager/brb",
+        component: ClipQueue,
+        layout: "none",
+        hidden: true,
+      },
     ],
   },
 ];

@@ -6,6 +6,8 @@ export const TwitchApiEndpoints = {
   CLIPS: "https://api.twitch.tv/helix/clips",
   GAMES: "https://api.twitch.tv/helix/games",
   USERS: "https://api.twitch.tv/helix/users",
+  TEAMS: "https://api.twitch.tv/helix/teams",
+  STREAMS: "https://api.twitch.tv/helix/streams",
 };
 
 export const [twitchAuthState, setTwitchAuthState] =
