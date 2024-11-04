@@ -9,7 +9,8 @@ export const pages: Page[] = [
   {
     name: "Home",
     url: "/",
-    component: App,
+    component: ClipQueue,
+    layout: "none",
   },
   {
     name: "Clips",
